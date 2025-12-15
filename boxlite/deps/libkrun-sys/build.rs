@@ -451,32 +451,48 @@ fn setup_llvm_env() {
         .status()
         .is_ok_and(|s| s.success())
     {
+        println!("cargo:warning=llvm-config found in PATH, skipping LLVM setup");
         return;
     }
+
+    println!("cargo:warning=llvm-config not in PATH, trying to find brew's llvm...");
 
     // Try to find brew's llvm
     if let Ok(output) = Command::new("brew").args(["--prefix", "llvm"]).output() {
         if output.status.success() {
             let prefix = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            println!("cargo:warning=Found brew llvm at: {}", prefix);
             let bin_path = format!("{}/bin", prefix);
             let lib_path = format!("{}/lib", prefix);
 
             // Add llvm/bin to PATH for lld
             if Path::new(&bin_path).join("lld").exists() {
                 if let Ok(current_path) = env::var("PATH") {
-                    env::set_var("PATH", format!("{}:{}", bin_path, current_path));
+                    let new_path = format!("{}:{}", bin_path, current_path);
+                    println!("cargo:warning=Adding {} to PATH", bin_path);
+                    env::set_var("PATH", &new_path);
                 } else {
                     env::set_var("PATH", &bin_path);
                 }
+            } else {
+                println!("cargo:warning=lld not found at {}/lld", bin_path);
             }
 
             // Set LIBCLANG_PATH for bindgen
             if env::var("LIBCLANG_PATH").is_err()
                 && Path::new(&lib_path).join("libclang.dylib").exists()
             {
+                println!("cargo:warning=Setting LIBCLANG_PATH={}", lib_path);
                 env::set_var("LIBCLANG_PATH", &lib_path);
             }
+        } else {
+            println!(
+                "cargo:warning=brew --prefix llvm failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
+    } else {
+        println!("cargo:warning=Failed to run brew command");
     }
 }
 
