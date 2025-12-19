@@ -9,6 +9,7 @@ use crate::portal::interfaces::VolumeConfig;
 use crate::vmm::{BlockDevice, BlockDevices, FsShares};
 
 /// Tracked virtiofs share entry.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FsShareEntry {
     pub tag: String,
@@ -18,6 +19,7 @@ pub struct FsShareEntry {
 }
 
 /// Tracked block device entry.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct BlockDeviceEntry {
     pub block_id: String,
@@ -28,6 +30,7 @@ pub struct BlockDeviceEntry {
 }
 
 /// VMM layer mount configuration.
+#[allow(dead_code)]
 pub struct VmmMountConfig {
     pub fs_shares: FsShares,
     pub block_devices: BlockDevices,
@@ -37,6 +40,7 @@ pub struct VmmMountConfig {
 ///
 /// Tracks virtiofs shares and block devices, generates VMM config
 /// and guest mount instructions.
+#[allow(dead_code)]
 pub struct GuestVolumeManager {
     fs_shares: Vec<FsShareEntry>,
     block_devices: Vec<BlockDeviceEntry>,
@@ -44,6 +48,7 @@ pub struct GuestVolumeManager {
     next_auto_tag_index: u32,
 }
 
+#[allow(dead_code)]
 impl GuestVolumeManager {
     /// Create a new guest volume manager.
     pub fn new() -> Self {
@@ -84,12 +89,6 @@ impl GuestVolumeManager {
         self.next_block_index += 1;
 
         let device_path = format!("/dev/{}", block_id);
-
-        // Convert disk::DiskFormat to vmm::DiskFormat
-        let vmm_format = match format {
-            DiskFormat::Ext4 => crate::vmm::DiskFormat::Raw,
-            DiskFormat::Qcow2 => crate::vmm::DiskFormat::Qcow2,
-        };
 
         self.block_devices.push(BlockDeviceEntry {
             block_id: block_id.clone(),

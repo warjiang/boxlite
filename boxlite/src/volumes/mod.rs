@@ -10,5 +10,8 @@ mod container_volume;
 mod guest_volume;
 
 pub use block_device::BlockDeviceManager;
+
+#[allow(unused_imports)]
 pub use container_volume::{ContainerMount, ContainerVolumeManager};
+#[allow(unused_imports)]
 pub use guest_volume::{BlockDeviceEntry, FsShareEntry, GuestVolumeManager, VmmMountConfig};

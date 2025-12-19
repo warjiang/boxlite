@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use super::guest_volume::GuestVolumeManager;
 
 /// Container bind mount entry.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ContainerMount {
     /// Source path in guest VM
@@ -19,15 +20,20 @@ pub struct ContainerMount {
 
 /// Manages container-level volume configuration.
 ///
-/// Tracks bind mounts from guest VM paths into container namespace.
-pub struct ContainerVolumeManager {
+/// Holds a reference to GuestVolumeManager and tracks bind mounts
+/// from guest VM paths into container namespace.
+#[allow(dead_code)]
+pub struct ContainerVolumeManager<'a> {
+    guest: &'a mut GuestVolumeManager,
     container_mounts: Vec<ContainerMount>,
 }
 
-impl ContainerVolumeManager {
+#[allow(dead_code)]
+impl<'a> ContainerVolumeManager<'a> {
     /// Create a new container volume manager.
-    pub fn new() -> Self {
+    pub fn new(guest: &'a mut GuestVolumeManager) -> Self {
         Self {
+            guest,
             container_mounts: Vec::new(),
         }
     }
@@ -37,15 +43,15 @@ impl ContainerVolumeManager {
     /// Sets up virtiofs share in guest, records bind mount for container.
     pub fn add_volume(
         &mut self,
-        guest: &mut GuestVolumeManager,
         host_path: PathBuf,
         guest_path: &str,
         container_path: &str,
         read_only: bool,
     ) {
         // Add virtiofs share to guest
-        let tag = guest.next_auto_tag();
-        guest.add_fs_share(&tag, host_path, guest_path, read_only);
+        let tag = self.guest.next_auto_tag();
+        self.guest
+            .add_fs_share(&tag, host_path, guest_path, read_only);
 
         // Record container bind mount
         self.container_mounts.push(ContainerMount {
@@ -69,11 +75,5 @@ impl ContainerVolumeManager {
     /// Build container mount configuration.
     pub fn build_container_mounts(&self) -> Vec<ContainerMount> {
         self.container_mounts.clone()
-    }
-}
-
-impl Default for ContainerVolumeManager {
-    fn default() -> Self {
-        Self::new()
     }
 }
