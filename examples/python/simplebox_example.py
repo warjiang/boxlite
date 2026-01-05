@@ -13,6 +13,7 @@ Demonstrates core BoxLite features using SimpleBox directly:
 
 import asyncio
 import logging
+import sys
 
 import boxlite
 
