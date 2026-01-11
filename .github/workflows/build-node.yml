@@ -1,0 +1,264 @@
+# Build Node.js SDK for all supported platforms.
+#
+# Self-contained workflow that builds and publishes Node.js packages to npm.
+# Uses napi-rs for native Rust bindings with platform-specific packages.
+#
+# Package structure:
+# - @boxlite-ai/boxlite (main package with TypeScript wrappers)
+# - @boxlite-ai/boxlite-darwin-arm64 (macOS ARM64 native binary)
+# - @boxlite-ai/boxlite-linux-x64-gnu (Linux x64 glibc native binary)
+#
+# Triggers:
+# - release: When a GitHub release is published
+# - workflow_dispatch: Manual trigger for testing
+name: Build Node.js
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  config:
+    uses: ./.github/workflows/config.yml
+
+  build:
+    name: Build (${{ matrix.target }})
+    needs: config
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.config.outputs.node-targets) }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.config.outputs.node-build-version }}
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ needs.config.outputs.rust-toolchain }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "boxlite"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build Node.js package
+        run: |
+          make setup
+          make dist:node
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION=$(node -p "require('./sdks/node/package.json').version")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create platform package
+        run: |
+          mkdir -p package
+          cp "sdks/node/index.${{ matrix.target }}.node" package/
+
+          # Build libc field only for Linux
+          LIBC_LINE=""
+          if [ -n "${{ matrix.npm_libc }}" ]; then
+            LIBC_LINE='"libc": ["${{ matrix.npm_libc }}"],'
+          fi
+
+          cat > package/package.json << EOF
+          {
+            "name": "@boxlite-ai/boxlite-${{ matrix.target }}",
+            "version": "${{ steps.version.outputs.version }}",
+            "os": ["${{ matrix.npm_os }}"],
+            "cpu": ["${{ matrix.npm_cpu }}"],
+            $LIBC_LINE
+            "main": "index.${{ matrix.target }}.node",
+            "files": ["index.${{ matrix.target }}.node"],
+            "license": "Apache-2.0"
+          }
+          EOF
+
+          echo "=== Platform package ==="
+          cat package/package.json
+
+      - name: Upload platform package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.target }}
+          path: package/
+          if-no-files-found: error
+          retention-days: ${{ needs.config.outputs.artifact-retention-days }}
+
+      # Upload main package only once (from darwin-arm64 build)
+      - name: Create main package
+        if: matrix.target == 'darwin-arm64'
+        run: |
+          mkdir -p main-package
+          cp -r sdks/node/dist main-package/
+          cp sdks/node/index.js main-package/
+          cp sdks/node/index.d.ts main-package/
+
+          # Update package.json with version and optionalDependencies
+          VERSION="${{ steps.version.outputs.version }}"
+          node -e "
+            const pkg = require('./sdks/node/package.json');
+            pkg.version = '$VERSION';
+            pkg.optionalDependencies = {
+              '@boxlite-ai/boxlite-darwin-arm64': '$VERSION',
+              '@boxlite-ai/boxlite-darwin-x64': '$VERSION',
+              '@boxlite-ai/boxlite-linux-x64-gnu': '$VERSION',
+              '@boxlite-ai/boxlite-linux-arm64-gnu': '$VERSION'
+            };
+            require('fs').writeFileSync('./main-package/package.json', JSON.stringify(pkg, null, 2));
+          "
+
+          echo "=== Main package ==="
+          cat main-package/package.json
+
+      - name: Upload main package
+        if: matrix.target == 'darwin-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-main
+          path: main-package/
+          if-no-files-found: error
+          retention-days: ${{ needs.config.outputs.artifact-retention-days }}
+
+  test:
+    name: Test (${{ matrix.target }} / Node ${{ matrix.node-version }})
+    needs: [config, build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-13, ubuntu-latest, ubuntu-24.04-arm]
+        node-version: ${{ fromJson(needs.config.outputs.node-versions) }}
+        include:
+          - os: macos-15
+            target: darwin-arm64
+          - os: macos-13
+            target: darwin-x64
+          - os: ubuntu-latest
+            target: linux-x64-gnu
+          - os: ubuntu-24.04-arm
+            target: linux-arm64-gnu
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download main package
+        uses: actions/download-artifact@v4
+        with:
+          name: package-main
+          path: sdks/node
+
+      - name: Download platform package
+        uses: actions/download-artifact@v4
+        with:
+          name: package-${{ matrix.target }}
+          path: sdks/node
+
+      - name: Test package
+        run: |
+          cd sdks/node
+          npm install --ignore-scripts
+          node -e "const boxlite = require('./dist'); console.log('BoxLite Node.js SDK loaded successfully')"
+
+  publish:
+    name: Publish to npm
+    needs: [config, build, test]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          pattern: package-*
+
+      - name: List packages
+        run: find packages -type f | head -50
+
+      - name: Publish platform packages
+        run: |
+          for target in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu; do
+            echo "Publishing @boxlite-ai/boxlite-$target..."
+            (cd "packages/package-$target" && npm publish --provenance --access public)
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Wait for npm registry sync
+        run: sleep 30
+
+      - name: Publish main package
+        run: |
+          cd packages/package-main
+          npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  upload-to-release:
+    name: Upload to GitHub Release
+    needs: [config, build, test]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          pattern: package-*
+
+      - name: Create archives
+        run: |
+          cd packages
+          tar -czvf boxlite-node.tar.gz package-main/
+          for target in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu; do
+            tar -czvf "boxlite-node-$target.tar.gz" "package-$target/"
+          done
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            packages/boxlite-node.tar.gz
+            packages/boxlite-node-darwin-arm64.tar.gz
+            packages/boxlite-node-darwin-x64.tar.gz
+            packages/boxlite-node-linux-x64-gnu.tar.gz
+            packages/boxlite-node-linux-arm64-gnu.tar.gz
+          fail_on_unmatched_files: true
