@@ -76,15 +76,27 @@ fn set_rpath(dest: &Path) {
 }
 
 fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+    use std::process::Command;
+
     fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let dst_path = dst.join(entry.file_name());
-        if entry.file_type()?.is_dir() {
-            copy_dir_all(&entry.path(), &dst_path)?;
-        } else {
-            fs::copy(entry.path(), &dst_path)?;
-        }
+
+    // Use ditto on macOS to preserve code signing metadata and extended attributes.
+    // Use cp -R on Linux.
+    #[cfg(target_os = "macos")]
+    let status = Command::new("ditto").arg(src).arg(dst).status()?;
+
+    #[cfg(not(target_os = "macos"))]
+    let status = Command::new("cp")
+        .args(["-R", "-T"]) // -T treats dst as file, not directory (copies contents, not src into dst)
+        .arg(src)
+        .arg(dst)
+        .status()?;
+
+    if !status.success() {
+        return Err(std::io::Error::other(format!(
+            "copy command failed with exit code: {:?}",
+            status.code()
+        )));
     }
     Ok(())
 }
