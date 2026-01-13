@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import type { ExecResult } from '../lib/exec';
+import type { ExecResult } from '../lib/exec.js';
 
 describe('ExecResult', () => {
   test('interface has required properties', () => {

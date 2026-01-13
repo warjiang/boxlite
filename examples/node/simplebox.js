@@ -8,7 +8,7 @@
  * - Proper cleanup
  */
 
-const { SimpleBox } = require('@boxlite-ai/boxlite');
+import { SimpleBox } from '@boxlite-ai/boxlite';
 
 async function main() {
   console.log('=== SimpleBox Example ===\n');

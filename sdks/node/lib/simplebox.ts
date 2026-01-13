@@ -8,8 +8,8 @@
  * 3. Try/finally cleanup patterns
  */
 
-import type { ExecResult } from './exec';
-import { getJsBoxlite } from './native';
+import type { ExecResult } from './exec.js';
+import { getJsBoxlite } from './native.js';
 
 // Import types from native module (will be available after build)
 type Boxlite = any;

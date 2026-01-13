@@ -4,8 +4,8 @@
  * Provides automatic PTY-based interactive sessions, similar to `docker exec -it`.
  */
 
-import { SimpleBoxOptions } from './simplebox';
-import { getJsBoxlite } from './native';
+import { SimpleBoxOptions } from './simplebox.js';
+import { getJsBoxlite } from './native.js';
 
 // Import types from native module (will be available after build)
 type Boxlite = any;

@@ -93,7 +93,7 @@ jobs:
       - name: Download wheels
         uses: actions/download-artifact@v5
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.platform.os }}
           path: wheelhouse
 
       - name: Install wheel

@@ -9,8 +9,8 @@
  * - Web browser access
  */
 
-const { ComputerBox } = require('@boxlite-ai/boxlite');
-const fs = require('fs');
+import { ComputerBox } from '@boxlite-ai/boxlite';
+import fs from 'fs';
 
 async function main() {
   console.log('=== ComputerBox Example ===\n');

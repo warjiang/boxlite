@@ -4,8 +4,8 @@
  * Provides a simple, secure environment for running untrusted Python code.
  */
 
-import { SimpleBox, type SimpleBoxOptions } from './simplebox';
-import { ExecError } from './errors';
+import { SimpleBox, type SimpleBoxOptions } from './simplebox.js';
+import { ExecError } from './errors.js';
 
 /**
  * Options for creating a CodeBox.

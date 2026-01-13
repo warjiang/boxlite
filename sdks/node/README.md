@@ -40,7 +40,7 @@ npm install boxlite
 ### JavaScript
 
 ```javascript
-const { SimpleBox } = require('boxlite');
+import { SimpleBox } from '@boxlite-ai/boxlite';
 
 async function main() {
   const box = new SimpleBox({ image: 'alpine:latest' });
@@ -186,7 +186,7 @@ try {
   console.log(endpoint);  // http://localhost:9222
 
   // Connect with Puppeteer
-  const puppeteer = require('puppeteer-core');
+  import puppeteer from 'puppeteer-core';
   const browserInstance = await puppeteer.connect({ browserURL: endpoint });
 
   const page = await browserInstance.newPage();

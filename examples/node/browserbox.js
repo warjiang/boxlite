@@ -7,7 +7,7 @@
  * - Connecting with Puppeteer (optional)
  */
 
-const { BrowserBox } = require('@boxlite-ai/boxlite');
+import { BrowserBox } from '@boxlite-ai/boxlite';
 
 async function main() {
   console.log('=== BrowserBox Example ===\n');
@@ -40,7 +40,7 @@ async function main() {
 
     console.log('5. Example: Connecting with Puppeteer (if installed)...');
     try {
-      const puppeteer = require('puppeteer-core');
+      const puppeteer = await import('puppeteer-core').then(m => m.default);
 
       console.log('   Connecting to browser...');
       const browserInstance = await puppeteer.connect({ browserURL: endpoint });

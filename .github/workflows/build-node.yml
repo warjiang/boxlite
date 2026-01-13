@@ -142,7 +142,7 @@ jobs:
           # Install platform package first, then main package
           npm install boxlite-ai-boxlite-${{ matrix.platform.target }}-*.tgz
           npm install boxlite-ai-boxlite-[0-9]*.tgz
-          node -e "const boxlite = require('@boxlite-ai/boxlite'); console.log('BoxLite Node.js SDK loaded successfully')"
+          node -e "import('@boxlite-ai/boxlite').then(() => console.log('BoxLite Node.js SDK loaded successfully'))"
 
   publish:
     name: Publish to npm

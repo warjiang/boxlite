@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { BoxliteError, ExecError, TimeoutError, ParseError } from '../lib/errors';
+import { BoxliteError, ExecError, TimeoutError, ParseError } from '../lib/errors.js';
 
 describe('BoxliteError', () => {
   test('is an Error instance', () => {

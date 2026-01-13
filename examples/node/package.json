@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Example scripts for BoxLite Node.js SDK",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "simplebox": "node simplebox.js",
     "codebox": "node codebox.js",

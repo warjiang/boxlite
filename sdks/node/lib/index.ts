@@ -19,7 +19,7 @@
  * @packageDocumentation
  */
 
-import { getNativeModule, getJsBoxlite } from './native';
+import { getNativeModule, getJsBoxlite } from './native.js';
 
 // Re-export native bindings
 export const JsBoxlite = getJsBoxlite();
@@ -28,13 +28,13 @@ export const JsBoxlite = getJsBoxlite();
 export { getNativeModule, getJsBoxlite };
 
 // Re-export TypeScript wrappers
-export { SimpleBox, type SimpleBoxOptions } from './simplebox';
-export { type ExecResult } from './exec';
-export { BoxliteError, ExecError, TimeoutError, ParseError } from './errors';
-export * from './constants';
+export { SimpleBox, type SimpleBoxOptions } from './simplebox.js';
+export { type ExecResult } from './exec.js';
+export { BoxliteError, ExecError, TimeoutError, ParseError } from './errors.js';
+export * from './constants.js';
 
 // Specialized boxes
-export { CodeBox, type CodeBoxOptions } from './codebox';
-export { BrowserBox, type BrowserBoxOptions, type BrowserType } from './browserbox';
-export { ComputerBox, type ComputerBoxOptions, type Screenshot } from './computerbox';
-export { InteractiveBox, type InteractiveBoxOptions } from './interactivebox';
+export { CodeBox, type CodeBoxOptions } from './codebox.js';
+export { BrowserBox, type BrowserBoxOptions, type BrowserType } from './browserbox.js';
+export { ComputerBox, type ComputerBoxOptions, type Screenshot } from './computerbox.js';
+export { InteractiveBox, type InteractiveBoxOptions } from './interactivebox.js';

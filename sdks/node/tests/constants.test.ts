@@ -24,7 +24,7 @@ import {
   BROWSERBOX_PORT_WEBKIT,
   DEFAULT_CPUS,
   DEFAULT_MEMORY_MIB,
-} from '../lib/constants';
+} from '../lib/constants.js';
 
 describe('ComputerBox Constants', () => {
   test('COMPUTERBOX_IMAGE is a valid container image', () => {

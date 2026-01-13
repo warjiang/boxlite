@@ -5,9 +5,9 @@
  * controlled from outside using standard tools like Puppeteer or Playwright.
  */
 
-import { SimpleBox, type SimpleBoxOptions } from './simplebox';
-import { TimeoutError } from './errors';
-import * as constants from './constants';
+import { SimpleBox, type SimpleBoxOptions } from './simplebox.js';
+import { TimeoutError } from './errors.js';
+import * as constants from './constants.js';
 
 /**
  * Browser type supported by BrowserBox.

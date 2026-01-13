@@ -5,9 +5,9 @@
  * that can be viewed from a browser, with full GUI automation support.
  */
 
-import { SimpleBox, type SimpleBoxOptions } from './simplebox';
-import { ExecError, TimeoutError, ParseError } from './errors';
-import * as constants from './constants';
+import { SimpleBox, type SimpleBoxOptions } from './simplebox.js';
+import { ExecError, TimeoutError, ParseError } from './errors.js';
+import * as constants from './constants.js';
 
 /**
  * Options for creating a ComputerBox.
