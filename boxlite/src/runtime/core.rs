@@ -212,6 +212,28 @@ impl BoxliteRuntime {
     pub async fn remove(&self, id_or_name: &str, force: bool) -> BoxliteResult<()> {
         self.rt_impl.remove(id_or_name, force)
     }
+
+    // ========================================================================
+    // IMAGE OPERATIONS (delegate to ImageManager)
+    // ========================================================================
+
+    /// Pull an OCI image from a registry.
+    ///
+    /// Checks local cache first. If the image is already cached and complete,
+    /// returns immediately without network access. Otherwise pulls from registry.
+    ///
+    /// # Arguments
+    ///
+    /// * `image_ref` - Image reference (e.g., "alpine:latest", "docker.io/library/python:3.11")
+    ///
+    /// # Returns
+    ///
+    /// Returns an `ImageObject` that provides access to image metadata, layers,
+    /// and configuration.
+    ///
+    pub async fn pull_image(&self, image_ref: &str) -> BoxliteResult<crate::images::ImageObject> {
+        self.rt_impl.image_manager.pull(image_ref).await
+    }
 }
 
 // ============================================================================

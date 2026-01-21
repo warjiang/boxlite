@@ -40,6 +40,7 @@ async fn main() {
         cli::Commands::Start(args) => commands::start::execute(args, &cli.global).await,
         cli::Commands::Stop(args) => commands::stop::execute(args, &cli.global).await,
         cli::Commands::Restart(args) => commands::restart::execute(args, &cli.global).await,
+        cli::Commands::Pull(args) => commands::pull::execute(args, &cli.global).await,
     };
 
     if let Err(error) = result {

@@ -66,6 +66,9 @@ pub enum Commands {
 
     /// Restart one or more boxes
     Restart(crate::commands::restart::RestartArgs),
+
+    /// Pull an image from a registry
+    Pull(crate::commands::pull::PullArgs),
 }
 
 // ============================================================================
