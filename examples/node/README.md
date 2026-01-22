@@ -8,7 +8,7 @@ If you installed BoxLite via npm:
 
 ```bash
 # Install BoxLite
-npm install boxlite
+npm install @boxlite-ai/boxlite
 
 # Run examples directly
 node simplebox.js
